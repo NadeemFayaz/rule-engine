@@ -1,0 +1,21 @@
+{
+    "type": "operator",
+    "value": "AND",
+    "left": {
+      "type": "operator",
+      "value": "OR",
+      "left": {
+        "type": "operand",
+        "value": "age > 30"
+      },
+      "right": {
+        "type": "operand",
+        "value": "department = 'Sales'"
+      }
+    },
+    "right": {
+      "type": "operand",
+      "value": "salary > 50000"
+    }
+  }
+  
