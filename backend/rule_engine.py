@@ -2,19 +2,11 @@
 from .ast_node import Node
 
 def create_rule(rule_string):
+    # Create an AST Node and return its dictionary representation
+    node = Node(node_type="operand", value=rule_string)
+    return node.to_dict()
 
-    # For simplicity, here’s an example that directly returns an AST for rule1
-    node = Node(node_type="operator", value="AND",
-                left=Node(node_type="operator", value="OR",
-                          left=Node(node_type="operand", value="age > 30"),
-                          right=Node(node_type="operand", value="department = 'Sales'")
-                         ),
-                right=Node(node_type="operator", value="OR",
-                           left=Node(node_type="operand", value="salary > 50000"),
-                           right=Node(node_type="operand", value="experience > 5")
-                          )
-               )
-    return node
+
     
 
 def combine_rules(rules):

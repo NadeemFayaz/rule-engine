@@ -1,26 +1,22 @@
-# backend/database.py
-import pymongo
-from bson import ObjectId
+from pymongo import MongoClient
 
-# Connect to the local MongoDB instance
-client = pymongo.MongoClient("mongodb://localhost:27017/")
-
-# Use the 'rule_engine' database
-db = client["rule_engine"]
-
-# Create or access the 'rules' collection
-rules_collection = db["rules"]
+# Initialize the MongoDB client and database
+client = MongoClient('mongodb://localhost:27017/')  # Update the URI as needed
+db = client['rule_engine_db']
+rules_collection = db['rules']
 
 def save_rule(rule_ast, metadata):
-    # Convert the AST Node to a dictionary
-    rule_dict = rule_ast.to_dict()
-    rule_id = rules_collection.insert_one({
-        'rule': rule_dict,
-        'metadata': metadata
-    }).inserted_id
-    return rule_id
+    try:
+        rule_id = rules_collection.insert_one({
+            "rule_ast": rule_ast,  # This is now a JSON-serializable dictionary
+            "metadata": metadata
+        }).inserted_id
+        print(f"Inserted rule with ID: {rule_id}")
+        return rule_id
+    except Exception as e:
+        print(f"Error saving rule to database: {e}")
+        raise  # Re-raise the exception to be handled in the route
 
 
 def get_rule(rule_id):
-    rule = rules_collection.find_one({"_id": ObjectId(rule_id)})
-    return rule
+    return rules_collection.find_one({"_id": rule_id})

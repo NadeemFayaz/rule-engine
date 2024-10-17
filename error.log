@@ -1,0 +1,5 @@
+Error creating rule: cannot encode object: <backend.ast_node.Node object at 0x0000024E6DC6E8A0>, of type: <class 'backend.ast_node.Node'>
+Error creating rule: cannot encode object: <backend.ast_node.Node object at 0x0000021850B6E390>, of type: <class 'backend.ast_node.Node'>
+Error creating rule: cannot encode object: <backend.ast_node.Node object at 0x000001D4C54529C0>, of type: <class 'backend.ast_node.Node'>
+Error creating rule: cannot encode object: <backend.ast_node.Node object at 0x0000025EB9DBA300>, of type: <class 'backend.ast_node.Node'>
+Error creating rule: Object of type ObjectId is not JSON serializable
