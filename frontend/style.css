@@ -1,0 +1,32 @@
+/* frontend/style.css */
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+#app {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+form {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    margin-right: 10px;
+}
+
+button {
+    padding: 10px;
+}
+
+pre {
+    background-color: #eee;
+    padding: 15px;
+    border-radius: 4px;
+}
