@@ -2,19 +2,24 @@
 import pymongo
 from bson import ObjectId
 
-# Setup MongoDB connection
+# Connect to the local MongoDB instance
 client = pymongo.MongoClient("mongodb://localhost:27017/")
+
+# Use the 'rule_engine' database
 db = client["rule_engine"]
 
-# Collection for storing rules
+# Create or access the 'rules' collection
 rules_collection = db["rules"]
 
 def save_rule(rule_ast, metadata):
+    # Convert the AST Node to a dictionary
+    rule_dict = rule_ast.to_dict()
     rule_id = rules_collection.insert_one({
-        "ast": rule_ast.__dict__,
-        "metadata": metadata
+        'rule': rule_dict,
+        'metadata': metadata
     }).inserted_id
     return rule_id
+
 
 def get_rule(rule_id):
     rule = rules_collection.find_one({"_id": ObjectId(rule_id)})
