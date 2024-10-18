@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from backend.ast_node import Node  # Replace 'backend.ast_node' with the correct module
 from backend.rule_engine import create_rule, combine_rules, evaluate_rule
 from backend.database import save_rule, get_rule
 import logging
@@ -48,13 +49,10 @@ def create_rule_route():
 
 @app.route('/combine_rules', methods=['POST'])
 def combine_rules_route():
-    """
-    This route takes a list of rule strings from the request and returns the combined AST.
-    """
     data = request.json  # Expecting JSON data with a list of rules
     app.logger.debug(f"Received data: {data}")
-    
-    rule_strings = data.get('rule_strings')  # Get the list of rule strings
+
+    rule_strings = data.get('rule_strings')
     if not rule_strings or not isinstance(rule_strings, list):
         app.logger.error("Missing or invalid 'rule_strings' in request data.")
         return jsonify(error="Missing or invalid rule_strings"), 400  # Bad request
@@ -62,38 +60,10 @@ def combine_rules_route():
     try:
         combined_ast = combine_rules(rule_strings)  # Combine the rules into a single AST
         app.logger.debug(f"Combined Rule AST: {combined_ast}")
-        return jsonify(ast=combined_ast.to_dict()), 200  # Return the AST as a JSON response
+        return jsonify(ast=combined_ast.to_dict()), 200  # Convert Node object to dict and return as JSON
     except Exception as e:
-        app.logger.error(f"Error combining rules: {e}")  # Log the error
-        return jsonify(error="Failed to combine rules"), 500  # Internal server error
-
-def parse_rule_to_ast(rule_string):
-    """
-    Convert a single rule string (e.g., 'age > 30') into an AST node.
-    """
-    return Node(node_type="operand", value=rule_string)
-
-def combine_rules(rules):
-    """
-    Combines a list of rule strings into a single AST.
-    """
-    if not rules:
-        raise ValueError("No rules to combine")
-    
-    # Parse all rule strings into ASTs
-    asts = [parse_rule_to_ast(rule) for rule in rules]
-    
-    # Use 'AND' to combine all ASTs, minimizing redundant checks
-    combined_ast = asts[0]  # Start with the first rule's AST
-    
-    for ast in asts[1:]:
-        combined_ast = Node(node_type="operator", value="AND", left=combined_ast, right=ast)
-    
-    return combined_ast  # Return the root of the combined AST
-
-
-
-
+        app.logger.error(f"Error combining rules: {e}")
+        return jsonify(error="Failed to combine rules"), 500
 # Route for evaluating a rule
 @app.route('/evaluate_rule', methods=['POST'])
 def evaluate_rule_route():

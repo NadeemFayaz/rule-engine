@@ -2,9 +2,10 @@
 from .ast_node import Node
 
 def create_rule(rule_string):
-    # Create an AST Node and return its dictionary representation
+    # Create an AST Node and return the Node object
     node = Node(node_type="operand", value=rule_string)
-    return node.to_dict()
+    return node  # Return the Node object itself
+
 
 
     

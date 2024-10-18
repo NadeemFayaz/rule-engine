@@ -1,21 +1,44 @@
-<!-- frontend/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
     <title>Rule Engine UI</title>
 </head>
 <body>
-    <h1>Rule Engine</h1>
-    <div id="app">
-        <form id="ruleForm">
-            <input type="text" id="ruleInput" placeholder="Enter rule string">
-            <button type="submit">Create Rule</button>
-        </form>
-        <pre id="ruleOutput"></pre>
-    </div>
+    <h1>Rule Engine UI</h1>
+    
+    <!-- Form to create a rule -->
+    <h2>Create Rule</h2>
+    <form id="ruleForm">
+        <label for="ruleInput">Enter Rule:</label>
+        <input type="text" id="ruleInput" placeholder="e.g., age > 30 AND salary > 50000">
+        <button type="submit">Create Rule</button>
+    </form>
+    <pre id="ruleOutput"></pre>
+
+    <!-- Form to combine rules -->
+    <h2>Combine Rules</h2>
+    <form id="combineForm">
+        <label for="rulesInput">Enter Rules (comma-separated):</label>
+        <input type="text" id="rulesInput" placeholder="e.g., age > 30, salary > 50000">
+        <button type="submit">Combine Rules</button>
+    </form>
+    <pre id="combineOutput"></pre>
+
+    <!-- Form to evaluate rule -->
+    <h2>Evaluate Rule</h2>
+    <form id="evaluateForm">
+        <label for="ruleIdInput">Rule ID:</label>
+        <input type="text" id="ruleIdInput" placeholder="Enter Rule ID">
+
+        <label for="userDataInput">User Data (JSON format):</label>
+        <textarea id="userDataInput" placeholder='e.g., {"age": 35, "salary": 60000}'></textarea>
+
+        <button type="submit">Evaluate Rule</button>
+    </form>
+    <pre id="evaluateOutput"></pre>
+
     <script src="app.js"></script>
 </body>
 </html>
