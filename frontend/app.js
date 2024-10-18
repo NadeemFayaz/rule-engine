@@ -1,31 +1,43 @@
 document.getElementById("ruleForm").addEventListener("submit", function(event) {
     event.preventDefault();
     
-    const rule = document.getElementById("ruleInput").value;
+    const rule = document.getElementById("ruleInput").value.trim();
     
-    fetch('/create_rule', {
+    if (!rule) {
+        alert("Rule cannot be empty!");
+        return;
+    }
+
+    fetch('http://localhost:5000/create_rule', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ rule_string: rule }),  // Adjust according to backend's expected JSON structure
+        body: JSON.stringify({ rule_string: rule }),  // Ensure the body is correct
     })
-    .then(response => response.json())
+    
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Error creating rule: " + response.statusText);
+        }
+        return response.json();
+    })
     .then(data => {
         document.getElementById("ruleOutput").innerText = JSON.stringify(data, null, 2);
     })
     .catch(error => {
         console.error('Error:', error);
-        document.getElementById("ruleOutput").innerText = "Error creating rule.";
+        document.getElementById("ruleOutput").innerText = "Error creating rule: " + error.message;
     });
 });
+
 
 document.getElementById("combineForm").addEventListener("submit", function(event) {
     event.preventDefault();
     
     const rules = document.getElementById("rulesInput").value.split(',');
     
-    fetch('/combine_rules', {
+    fetch('http://localhost:5000/combine_rules', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -48,7 +60,7 @@ document.getElementById("evaluateForm").addEventListener("submit", function(even
     const ruleId = document.getElementById("ruleIdInput").value;
     const userData = JSON.parse(document.getElementById("userDataInput").value);
     
-    fetch('/evaluate_rule', {
+    fetch('http://localhost:5000/evaluate_rule', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

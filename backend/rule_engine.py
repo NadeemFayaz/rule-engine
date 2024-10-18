@@ -21,12 +21,15 @@ def combine_rules(rules):
     
     return combined_ast
 
-def evaluate_rule(ast, data):
-    if ast.node_type == "operand":
-        return eval(ast.value, {}, data)
-    elif ast.node_type == "operator":
-        if ast.value == "AND":
-            return evaluate_rule(ast.left, data) and evaluate_rule(ast.right, data)
-        elif ast.value == "OR":
-            return evaluate_rule(ast.left, data) or evaluate_rule(ast.right, data)
-    return False
+def evaluate_rule(ast, user_data):
+    if ast['node_type'] == 'operand':
+        # Evaluate the operand; ensure 'age', 'salary' exist in user_data
+        expression = ast['value']
+        try:
+            # Dynamically evaluate the expression with user_data
+            return eval(expression, {}, user_data)
+        except KeyError as e:
+            return None  # Return None if a required field is missing
+    # Handle other node types if necessary
+
+

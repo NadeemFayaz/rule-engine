@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS  # Import CORS
 from backend.ast_node import Node  # Replace 'backend.ast_node' with the correct module
 from backend.rule_engine import create_rule, combine_rules, evaluate_rule
 from backend.database import save_rule, get_rule
@@ -8,6 +9,7 @@ from bson import ObjectId  # Import ObjectId if not already imported
 # logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
+CORS(app)
 
 # Define the root route
 @app.route('/')
@@ -16,33 +18,31 @@ def home():
 
 # Route for creating a rule
 
+# Route to create a rule
 @app.route('/create_rule', methods=['POST'])
 def create_rule_route():
-    data = request.json  # Expecting JSON data
-    app.logger.debug(f"Received data: {data}")
+    data = request.json
     rule_string = data.get('rule_string')
-    if not rule_string:
+
+    if rule_string:
+        try:
+            # Create the AST for the rule
+            rule_ast = create_rule(rule_string)
+            app.logger.debug(f"Rule AST: {rule_ast}")
+
+            # Convert the AST Node object to a serializable dictionary
+            rule_dict = rule_ast.to_dict()  # Assuming to_dict() converts AST to dictionary
+
+            # Save rule to the database
+            rule_id = save_rule(rule_dict, {"rule_string": rule_string})  # Save both rule_string and AST
+            return jsonify(rule_id=str(rule_id)), 201  # Return the rule ID
+        except Exception as e:
+            app.logger.error(f"Error creating rule: {str(e)}")  # Log the error
+            return jsonify(error=f"Error creating rule: {str(e)}"), 500  # Return detailed error message
+    else:
         app.logger.error("Missing 'rule_string' in request data.")
-        return jsonify(error="Missing rule_string"), 400  # Bad request
+        return jsonify(error="Missing 'rule_string' in request data."), 400
 
-    try:
-        with open('rule.log', 'a') as f:
-            f.write(f"Rule created: {rule_string}\n")
-
-        rule_ast = create_rule(rule_string)  # Convert the rule string to an AST   
-        app.logger.debug(f"Rule AST: {rule_ast}")
-        
-        rule_id = save_rule(rule_ast, {"rule_string": rule_string})  # Save the rule to the database
-        app.logger.debug(f"Rule saved with ID: {rule_id}")
-        
-        # Convert ObjectId to string before returning
-        return jsonify(rule_id=str(rule_id)), 201  # Return the created rule ID
-    except Exception as e:
-        app.logger.error(f"Error creating rule: {e}")  # Log the error
-        with open('error.log', 'a') as f:
-            f.write(f"Error creating rule: {e}\n")
-
-        return jsonify(error="Failed to create rule"), 500  # Internal server error
 
 # Route for combining rules
 
@@ -71,14 +71,23 @@ def evaluate_rule_route():
     rule_id = data.get('rule_id')
     user_data = data.get('user_data')
     
-    if rule_id and user_data:
-        rule = get_rule(rule_id)  # Retrieve the rule from the database
-        if rule:
-            is_eligible = evaluate_rule(rule['ast'], user_data)  # Evaluate the rule with user data
-            return jsonify(is_eligible=is_eligible), 200  # Return the evaluation result
-        return jsonify(error="Rule not found"), 404  # Return error if rule not found
+    app.logger.debug(f"Evaluating rule {rule_id} with user data: {user_data}")
     
-    return jsonify(error="Missing rule_id or user_data"), 400  # Return error if parameters are missing
+    # Fetch rule from database
+    rule = rules_collection.find_one({"_id": ObjectId(rule_id)})
+    if not rule:
+        app.logger.error("Rule not found")
+        return jsonify({"error": "Rule not found"}), 404
+    
+    # Evaluate rule
+    try:
+        is_eligible = evaluate_rule(rule['rule_ast'], user_data)
+        app.logger.debug(f"Evaluation result: {is_eligible}")
+        return jsonify({"is_eligible": is_eligible})
+    except Exception as e:
+        app.logger.error(f"Error evaluating rule: {e}")
+        return jsonify({"error": "Failed to evaluate rule"}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
