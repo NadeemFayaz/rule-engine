@@ -78,19 +78,68 @@ def evaluate_rule_route():
     if not rule:
         app.logger.error("Rule not found")
         return jsonify({"error": "Rule not found"}), 404
-
-    # Deserialize rule AST to Node object
+    app.logger.debug(f"Rule AST from DB: {rule['rule_ast']}")
     try:
-        rule_ast = Node.from_dict(rule['rule_ast'])
-        app.logger.debug(f"Deserialized rule AST: {rule_ast}")
+        rule_string = rule['rule_ast']['rule_string']
+        rule_ast = parse_rule_string(rule_string)  # Convert rule string to AST
+        app.logger.debug(f"Parsed rule AST: {rule_ast.to_dict()}")
 
         # Evaluate the rule
         is_eligible = evaluate_rule(rule_ast, user_data)
         app.logger.debug(f"Evaluation result: {is_eligible}")
-        return jsonify({"is_eligible": is_eligible})
+        return jsonify(is_eligible)
     except Exception as e:
         app.logger.error(f"Error evaluating rule: {e}")
         return jsonify({"error": f"Error during evaluation: {e}"}), 500
+    
+
+def parse_rule_string(rule_string):
+    # Parse the string into an AST
+    tokens = rule_string.split()
+
+    if "AND" in tokens or "OR" in tokens:
+        # Assuming simple two-part rules like "age > 30 AND salary > 50000"
+        operator = "AND" if "AND" in tokens else "OR"
+        parts = rule_string.split(operator)
+        left = parse_operand(parts[0].strip())
+        right = parse_operand(parts[1].strip())
+        return Node(node_type="operator", value=operator, left=left, right=right)
+    else:
+        # Simple operand without AND/OR
+        return parse_operand(rule_string.strip())
+
+import re
+
+def parse_operand(operand):
+    """
+    Parse the operand expression (e.g., 'age > 30').
+
+    Parameters:
+        operand (str): The operand expression to parse.
+
+    Returns:
+        tuple: The parsed key, operator, and threshold.
+    """
+    # Regular expression to match an operand like 'age > 30' or 'department = "Sales"'
+    match = re.match(r"(\w+)\s*(==|!=|>|<|>=|<=)\s*('?.*'?)", operand)
+    
+    if not match:
+        raise ValueError(f"Invalid operand format: {operand}")
+    
+    key, operator, threshold = match.groups()
+
+    # Remove quotes around string values
+    if threshold.startswith("'") and threshold.endswith("'"):
+        threshold = threshold[1:-1]
+    elif threshold.isdigit():  # Convert to an integer if it's a number
+        threshold = int(threshold)
+    else:
+        try:
+            threshold = float(threshold)
+        except ValueError:
+            pass  # Leave as a string if it's neither int nor float
+
+    return key, operator, threshold
 
 
 

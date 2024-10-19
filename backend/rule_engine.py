@@ -26,6 +26,7 @@ def evaluate_rule(rule_ast, user_data):
     Evaluate the given rule AST against user data.
 
     Parameters:
+    
         rule_ast (dict): The AST representing the rule.
         user_data (dict): The user data to evaluate against.
 
@@ -43,15 +44,15 @@ def evaluate_node(node, user_data):
     Recursively evaluate the AST nodes.
 
     Parameters:
-        node (dict): The current AST node.
+        node (Node): The current AST node.
         user_data (dict): The user data to evaluate against.
 
     Returns:
         bool: The result of the evaluation for this node.
     """
-    if node['node_type'] == 'operand':
+    if node.node_type == 'operand':
         # Parse the operand expression (e.g., "age > 30")
-        key, operator, threshold = parse_operand(node['value'])
+        key, operator, threshold = parse_operand(node.value)
         user_value = user_data.get(key)
 
         if user_value is None:
@@ -59,19 +60,20 @@ def evaluate_node(node, user_data):
 
         return apply_operator(user_value, operator, threshold)
 
-    elif node['node_type'] == 'operator':
-        left_result = evaluate_node(node['left'], user_data)
-        right_result = evaluate_node(node['right'], user_data)
+    elif node.node_type == 'operator':
+        left_result = evaluate_node(node.left, user_data)
+        right_result = evaluate_node(node.right, user_data)
 
-        if node['value'] == 'AND':
+        if node.value == 'AND':
             return left_result and right_result
-        elif node['value'] == 'OR':
+        elif node.value == 'OR':
             return left_result or right_result
         else:
-            raise ValueError(f"Unknown operator '{node['value']}'")
+            raise ValueError(f"Unknown operator '{node.value}'")
 
     else:
-        raise ValueError(f"Unknown node type '{node['node_type']}'")
+        raise ValueError(f"Unknown node type '{node.node_type}'")
+
 
 def apply_operator(user_value, operator, threshold):
     if operator == '>':
