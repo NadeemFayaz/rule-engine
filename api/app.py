@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS  # Import CORS
 from backend.ast_node import Node  # Replace 'backend.ast_node' with the correct module
 from backend.rule_engine import create_rule, combine_rules, evaluate_rule
-from backend.database import save_rule, get_rule
+from backend.database import save_rule,get_rule,rules_collection  # Add this import to get the collection reference
 import logging
 from bson import ObjectId  # Import ObjectId if not already imported
 
@@ -70,23 +70,28 @@ def evaluate_rule_route():
     data = request.json
     rule_id = data.get('rule_id')
     user_data = data.get('user_data')
-    
+
     app.logger.debug(f"Evaluating rule {rule_id} with user data: {user_data}")
-    
+
     # Fetch rule from database
     rule = rules_collection.find_one({"_id": ObjectId(rule_id)})
     if not rule:
         app.logger.error("Rule not found")
         return jsonify({"error": "Rule not found"}), 404
-    
-    # Evaluate rule
+
+    # Deserialize rule AST to Node object
     try:
-        is_eligible = evaluate_rule(rule['rule_ast'], user_data)
+        rule_ast = Node.from_dict(rule['rule_ast'])
+        app.logger.debug(f"Deserialized rule AST: {rule_ast}")
+
+        # Evaluate the rule
+        is_eligible = evaluate_rule(rule_ast, user_data)
         app.logger.debug(f"Evaluation result: {is_eligible}")
         return jsonify({"is_eligible": is_eligible})
     except Exception as e:
         app.logger.error(f"Error evaluating rule: {e}")
-        return jsonify({"error": "Failed to evaluate rule"}), 500
+        return jsonify({"error": f"Error during evaluation: {e}"}), 500
+
 
 
 if __name__ == '__main__':

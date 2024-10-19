@@ -21,15 +21,92 @@ def combine_rules(rules):
     
     return combined_ast
 
-def evaluate_rule(ast, user_data):
-    if ast['node_type'] == 'operand':
-        # Evaluate the operand; ensure 'age', 'salary' exist in user_data
-        expression = ast['value']
+def evaluate_rule(rule_ast, user_data):
+    """
+    Evaluate the given rule AST against user data.
+
+    Parameters:
+        rule_ast (dict): The AST representing the rule.
+        user_data (dict): The user data to evaluate against.
+
+    Returns:
+        bool: The result of the rule evaluation.
+    """
+    try:
+        result = evaluate_node(rule_ast, user_data)
+        return {"is_eligible": result}  # Wrap the result in a response dictionary
+    except Exception as e:
+        return {"error": f"Error during evaluation: {str(e)}"}
+
+def evaluate_node(node, user_data):
+    """
+    Recursively evaluate the AST nodes.
+
+    Parameters:
+        node (dict): The current AST node.
+        user_data (dict): The user data to evaluate against.
+
+    Returns:
+        bool: The result of the evaluation for this node.
+    """
+    if node['node_type'] == 'operand':
+        # Parse the operand expression (e.g., "age > 30")
+        key, operator, threshold = parse_operand(node['value'])
+        user_value = user_data.get(key)
+
+        if user_value is None:
+            raise ValueError(f"User data does not contain '{key}'")
+
+        return apply_operator(user_value, operator, threshold)
+
+    elif node['node_type'] == 'operator':
+        left_result = evaluate_node(node['left'], user_data)
+        right_result = evaluate_node(node['right'], user_data)
+
+        if node['value'] == 'AND':
+            return left_result and right_result
+        elif node['value'] == 'OR':
+            return left_result or right_result
+        else:
+            raise ValueError(f"Unknown operator '{node['value']}'")
+
+    else:
+        raise ValueError(f"Unknown node type '{node['node_type']}'")
+
+def apply_operator(user_value, operator, threshold):
+    if operator == '>':
+        return user_value > threshold
+    elif operator == '<':
+        return user_value < threshold
+    elif operator == '==':
+        return user_value == threshold
+    elif operator == '!=':
+        return user_value != threshold
+    # Add more operators as needed
+    else:
+        raise ValueError(f"Unknown operator '{operator}'")
+
+def parse_operand(operand):
+    # This is a simple approach; you may want to use regex for complex cases.
+    parts = operand.split()
+    if len(parts) != 3:
+        raise ValueError("Invalid operand format.")
+    
+    key = parts[0]
+    operator = parts[1]
+    threshold = parts[2]
+
+    # Attempt to convert the threshold to an appropriate type
+    try:
+        threshold = int(threshold)
+    except ValueError:
         try:
-            # Dynamically evaluate the expression with user_data
-            return eval(expression, {}, user_data)
-        except KeyError as e:
-            return None  # Return None if a required field is missing
-    # Handle other node types if necessary
+            threshold = float(threshold)
+        except ValueError:
+            pass  # Keep as string if not a number
+
+    return key, operator, threshold
+
+
 
 
